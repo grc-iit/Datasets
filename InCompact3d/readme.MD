@@ -1,1 +1,3 @@
-This is the dataet for Incompact3D
+This is the dataset for Incompact3D
+
+The dataset is generated from with incompact3D example
