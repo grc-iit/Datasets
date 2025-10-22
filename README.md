@@ -21,6 +21,10 @@ The repository is organized by data format and application:
 - **[HDF5](HDF5/)** - Hierarchical Data Format (dominant in scientific computing)
 - **[NetCDF](NetCDF/)** - Network Common Data Form (climate & atmospheric sciences)
 - **[Parquet](Parquet/)** - Columnar format for analytics and ML workflows
+- **[ROOT](ROOT/)** - Particle physics data format from CERN (LHC experiments)
+- **[FITS](FITS/)** - Flexible Image Transport System for astronomy
+- **[Crystallography](Crystallography/)** - Crystal structures in CIF format
+- **[Genomics](Genomics/)** - NGS data (FASTQ, SAM, VCF formats)
 - **[Darshan-Traces](Darshan-Traces/)** - HPC I/O characterization traces
 
 **Scientific Application Datasets:**
