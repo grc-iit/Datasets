@@ -4,12 +4,12 @@ This directory contains seismological datasets in HDF5 format simulating earthqu
 
 ## Datasets Overview
 
-Total size: **35 MB**
+Total size: **16 MB**
 
 | Dataset | Format | Size | Description |
 |---------|--------|------|-------------|
 | Earthquake Waveforms | HDF5 | 9.2 MB | 12 stations × 3 components (Z,N,E) |
-| Ambient Noise | HDF5 | 26 MB | 24 hours continuous seismic noise |
+| Ambient Noise | HDF5 | 6.4 MB | 6 hours continuous seismic noise |
 | Receiver Functions | HDF5 | 449 KB | 50 teleseismic RFs + stack |
 
 ---
@@ -174,16 +174,16 @@ with h5py.File('earthquake_waveforms.h5', 'r') as f:
 
 ## 2. Ambient Seismic Noise
 
-**File:** `ambient_noise_continuous.h5` (26 MB)
+**File:** `ambient_noise_continuous.h5` (6.4 MB)
 
-Continuous seismic background noise for 24 hours, typical of ambient noise cross-correlation studies.
+Continuous seismic background noise for 6 hours, typical of ambient noise cross-correlation studies.
 
 **Recording Parameters:**
 - **Station:** BKL (Berkeley Lab)
 - **Location:** 37.8744°N, -122.2597°W, 120 m elevation
 - **Sample rate:** 40 Hz
-- **Duration:** 24 hours (86,400 seconds)
-- **Total samples:** 3,456,000
+- **Duration:** 6 hours (21,600 seconds)
+- **Total samples:** 864,000
 
 **Noise Characteristics:**
 - **Primary microseism:** ~0.07 Hz (ocean wave interactions)
@@ -195,7 +195,7 @@ Continuous seismic background noise for 24 hours, typical of ambient noise cross
 ```
 /station_BKL/
   attributes: network, station, latitude, longitude, elevation_m
-  ├── hour_00/ through hour_23/
+  ├── hour_00/ through hour_05/ (6 hours)
   │   ├── data (144000 samples per hour)
   │   └── attributes: start_time, sample_rate, duration_sec
 ```
