@@ -1,0 +1,3 @@
+[submodule "Darshan-Traces/examples"]
+	path = Darshan-Traces/examples
+	url = https://github.com/darshan-hpc/darshan-logs.git
