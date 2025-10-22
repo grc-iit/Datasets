@@ -1,113 +1,49 @@
-# HDF5 Datasets
+# HDF5 Files - Hierarchical Data Format
 
-HDF5 (Hierarchical Data Format version 5) is the dominant format for scientific computing, providing:
-- Parallel I/O for HPC applications
-- Self-describing hierarchical structure
-- Efficient compression
-- Random access to large datasets
+HDF5 is the dominant format for scientific computing data, providing efficient storage for large, complex datasets.
+
+**Documentation:** [hdfgroup.org](https://www.hdfgroup.org/) | **Python API:** [docs.h5py.org](https://docs.h5py.org/)
 
 ## Available Datasets
 
-*Currently building this collection. Small example datasets will be added here.*
+### openPMD_2d_sample.h5
+- **Size:** 286 KB
+- **Type:** Plasma simulation (2D)
+- **Standard:** openPMD (Open Standard for Particle-Mesh Data)
+- **Description:** 2D electromagnetic field data from plasma physics simulation
 
-## Shadow Datasets (Large Collections)
+### openPMD_3d_sample.h5
+- **Size:** 286 KB
+- **Type:** Plasma simulation (3D)
+- **Standard:** openPMD
+- **Description:** 3D particle and field data from plasma simulation
 
-For HDF5 datasets too large to host on GitHub, see our shadow dataset documentation:
+### md_adk_protein.h5
+- **Size:** 287 KB
+- **Type:** Molecular dynamics trajectory
+- **Source:** MDAnalysis test dataset
+- **Description:** Adenylate kinase protein trajectory with atomic coordinates
 
-### Astrophysics & Cosmology
-- **IllustrisTNG** (1.1 PB): [Shadow-Datasets/Astrophysics-Cosmology.md](../Shadow-Datasets/Astrophysics-Cosmology.md)
-- **CAMELS** (200+ TB): Cosmology for machine learning
-- **CosmoFlow** (100 GB): ML-ready N-body simulations
+### protein_1CRN.pdb
+- **Size:** 49 KB
+- **Type:** Protein structure
+- **Resolution:** 0.945 Å
+- **Description:** Crambin protein from Protein Data Bank
 
-### Climate Science
-- **ERA5** (390 TB as NetCDF-4/HDF5): [Shadow-Datasets/Climate-Earth-Science.md](../Shadow-Datasets/Climate-Earth-Science.md)
-- **NASA Earth Science** (Multi-PB in HDF5/HDF-EOS5)
-- **GPM Precipitation** (HDF5 format)
+### lysozyme_2LYZ.pdb
+- **Size:** 131 KB
+- **Type:** Protein structure
+- **Description:** Chicken lysozyme crystal structure
 
-### Fluid Dynamics
-- **Johns Hopkins Turbulence DB** (1+ PB): [Shadow-Datasets/Computational-Fluid-Dynamics.md](../Shadow-Datasets/Computational-Fluid-Dynamics.md)
-- **DrivAerNet++** (39 TB): Automotive CFD with HDF5 fields
+## Where to Find More Data
 
-### Molecular Dynamics
-- **mdCATH** (3+ TB): [Shadow-Datasets/Molecular-Dynamics.md](../Shadow-Datasets/Molecular-Dynamics.md)
-- **ANI-1** (100+ GB): Quantum chemistry for neural network potentials
+- **OpenPMD Examples:** [github.com/openPMD/openPMD-example-datasets](https://github.com/openPMD/openPMD-example-datasets)
+- **Protein Data Bank:** [rcsb.org](https://www.rcsb.org/) - 200,000+ protein structures
+- **MDAnalysis Datasets:** [mdanalysis.org/MDAnalysisData](https://www.mdanalysis.org/MDAnalysisData/)
+- **HDF Group Resources:** [portal.hdfgroup.org/display/HDF5/Examples](https://portal.hdfgroup.org/display/HDF5/Examples)
 
-### Materials Science
-- **NOMAD** (19M+ records): [Shadow-Datasets/Materials-Science.md](../Shadow-Datasets/Materials-Science.md)
+## Shadow Datasets
 
-## Working with HDF5
-
-### Python (h5py)
-```python
-import h5py
-import numpy as np
-
-# Read HDF5 file
-with h5py.File('dataset.h5', 'r') as f:
-    # List all groups
-    print("Keys:", list(f.keys()))
-
-    # Access dataset
-    data = f['group/dataset'][:]
-
-    # Read attributes
-    attrs = dict(f['group'].attrs)
-
-# Write HDF5 file
-with h5py.File('output.h5', 'w') as f:
-    # Create group
-    grp = f.create_group('simulation')
-
-    # Create dataset with compression
-    grp.create_dataset('data', data=np.random.rand(1000, 1000),
-                       compression='gzip', compression_opts=9)
-
-    # Add metadata
-    grp.attrs['description'] = 'Simulation results'
-    grp.attrs['timestamp'] = '2024-01-01'
-```
-
-### Parallel HDF5 (MPI)
-```python
-from mpi4py import MPI
-import h5py
-
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
-
-# Parallel HDF5 write
-with h5py.File('parallel.h5', 'w', driver='mpio', comm=comm) as f:
-    # Each rank writes to its portion
-    dset = f.create_dataset('data', (size, 1000), dtype='f8')
-    dset[rank, :] = np.random.rand(1000) * rank
-```
-
-### Command Line (h5dump, h5ls)
-```bash
-# List contents
-h5ls -r file.h5
-
-# Dump data as text
-h5dump file.h5
-
-# Extract specific dataset
-h5dump -d /group/dataset file.h5
-
-# Get file structure
-h5stat file.h5
-```
-
-## Related Formats
-
-- **NetCDF-4:** Built on HDF5, adds CF conventions (see `../NetCDF/`)
-- **HDF-EOS5:** NASA's Earth Science extension of HDF5
-- **H5MD:** Molecular Dynamics standardized HDF5 structure
-- **MDTraj HDF5:** MD trajectory format
-
-## Resources
-
-- **HDF5 Official:** [hdfgroup.org](https://www.hdfgroup.org/)
-- **h5py Documentation:** [docs.h5py.org](https://docs.h5py.org/)
-- **HDF5 Tutorial:** [portal.hdfgroup.org/display/HDF5/Learning+HDF5](https://portal.hdfgroup.org/display/HDF5/Learning+HDF5)
-- **Parallel HDF5:** [portal.hdfgroup.org/display/HDF5/Parallel+HDF5](https://portal.hdfgroup.org/display/HDF5/Parallel+HDF5)
+For TB-scale HDF5 datasets, see:
+- [Shadow-Datasets/Molecular-Dynamics.md](../Shadow-Datasets/Molecular-Dynamics.md)
+- [Shadow-Datasets/Astrophysics-Cosmology.md](../Shadow-Datasets/Astrophysics-Cosmology.md)
