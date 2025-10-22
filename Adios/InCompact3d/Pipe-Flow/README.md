@@ -1,6 +1,20 @@
-## pipeflow
+# Pipe Flow
 
-When a fluid flows through a pipe the internal roughness (e) of the pipe wall can create local eddy currents within the fluid adding a resistance to flow of the fluid. Pipes with smooth walls such as glass, copper, brass and polyethylene have only a small effect on the frictional resistance. Pipes with less smooth walls such as concrete, cast iron and steel will create larger eddy currents which will sometimes have a significant effect on the frictional resistance. The velocity profile in a pipe will show that the fluid at the centre of the stream will move
-more quickly than the fluid towards the edge of the stream. Therefore friction will occur between layers within the fluid. Fluids with a high viscosity will flow more slowly and will generally not support eddy currents and therefore the internal roughness of the pipe will have no effect on the frictional resistance. This condition is known as laminar.
+This dataset contains simulation results for turbulent pipe flow using the Incompact3D solver.
 
-For more details, please refer to this [link](https://github.com/xcompact3d/Incompact3d/tree/master/examples/Pipe-Flow). 
+## About Pipe Flow
+
+When a fluid flows through a pipe, the internal roughness of the pipe wall can create local eddy currents within the fluid, adding resistance to flow. The velocity profile in a pipe shows that fluid at the center of the stream moves more quickly than fluid towards the edge, creating friction between layers within the fluid.
+
+Pipes with smooth walls (glass, copper, brass, polyethylene) have only a small effect on frictional resistance, while pipes with rough walls (concrete, cast iron, steel) create larger eddy currents with more significant effects. Fluids with high viscosity flow more slowly and generally don't support eddy currents, resulting in laminar flow conditions.
+
+## Dataset Contents
+
+- `data.bp5/` - ADIOS2 BP5 output files containing simulation results
+- `adios2_config.xml` - ADIOS2 configuration file
+- `input.i3d` - Incompact3D input parameters
+
+## References
+
+- [Incompact3D Pipe Flow Example](https://github.com/xcompact3d/Incompact3d/tree/master/examples/Pipe-Flow)
+- [Incompact3D Documentation](https://xcompact3d.readthedocs.io/) 
