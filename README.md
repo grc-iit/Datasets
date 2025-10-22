@@ -11,14 +11,14 @@ Centralized repository for datasets used by the [GRC organization at IIT](https:
 - [Parquet](Parquet/) - Columnar format files
 - [ROOT](ROOT/) - Particle physics data from CERN
 - [FITS](FITS/) - Astronomy image and data files
-- [Crystallography](Crystallography/) - Crystal structures (CIF format)
-- [Genomics](Genomics/) - Genomics and bioinformatics data
+- [CIF](Crystallography/) - Crystallographic Information Files (crystal structures)
 - [Darshan-Traces](Darshan-Traces/) - HPC I/O traces
 
 ### Scientific Domains
-- [Oceanography](Oceanography/) - Ocean and marine data
-- [Astronomy](Astronomy/) - Astronomical observations
-- [Seismology](Seismology/) - Earthquake and seismic data
+- [Oceanography](Oceanography/) - Ocean and marine data (NetCDF)
+- [Astronomy](Astronomy/) - Astronomical observations (FITS, HDF5)
+- [Seismology](Seismology/) - Earthquake and seismic data (HDF5)
+- [Genomics](Genomics/) - Genomics and bioinformatics data (FASTA, HDF5, SAM, VCF, FASTQ)
 
 ### Shadow Datasets
 Documentation for petabyte-scale public datasets:
