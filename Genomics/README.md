@@ -1,10 +1,13 @@
-# Genomics Datasets
+# Genomics Data Files
 
-This directory contains genomics datasets in FASTA and HDF5 formats for bioinformatics benchmarking and testing.
+Comprehensive genomics datasets covering multiple formats and analysis workflows - from reference genomes and gene sequences to sequencing reads, alignments, variant calls, and expression data.
 
-## Datasets Overview
+## Dataset Overview
 
-Total size: **8.5 MB**
+This directory contains two complementary sets of genomics data:
+
+### FASTA/HDF5 Datasets (8.5 MB)
+Reference sequences, population genetics, and expression data in structured formats.
 
 | Dataset | Format | Size | Description |
 |---------|--------|------|-------------|
@@ -13,7 +16,20 @@ Total size: **8.5 MB**
 | Variant Calls | HDF5 | 1.0 MB | 5,000 SNPs/indels × 100 samples |
 | RNA-seq Expression | HDF5 | 7.3 MB | 15,000 genes × 48 samples |
 
+### NGS Workflow Datasets (~3 KB)
+Standard next-generation sequencing formats for alignment and variant analysis.
+
+| Dataset | Format | Size | Description |
+|---------|--------|------|-------------|
+| toy_alignment.sam | SAM | 786 bytes | Aligned sequencing reads |
+| sample_variants.vcf | VCF | 2.1 KB | SNPs, insertions, deletions |
+| illumina_reads_sample.fastq | FASTQ | 178 bytes | Raw reads with quality scores |
+
+**Total:** ~8.5 MB across all datasets
+
 ---
+
+# Part 1: FASTA/HDF5 Datasets
 
 ## 1. Synthetic Genome Reference
 
@@ -284,7 +300,7 @@ with h5py.File('rnaseq_expression.h5', 'r') as f:
     plt.show()
 ```
 
-**Usage Example (Integration with scanpy for single-cell-like analysis):**
+**Usage Example (Integration with scanpy):**
 ```python
 import h5py
 import anndata
@@ -297,99 +313,434 @@ with h5py.File('rnaseq_expression.h5', 'r') as f:
     sample_ids = f['samples/sample_ids'][:].astype(str)
 
     adata = anndata.AnnData(X=counts.T)  # Transpose: samples × genes
-    adata.obs_names = sample_ids
     adata.var_names = gene_ids
+    adata.obs_names = sample_ids
 
     # Add metadata
     adata.obs['condition'] = f['samples/condition'][:].astype(str)
     adata.obs['timepoint'] = f['samples/timepoint'][:]
 
-    # Basic preprocessing
-    sc.pp.normalize_total(adata, target_sum=1e6)
-    sc.pp.log1p(adata)
-
-    # PCA and visualization
-    sc.pp.highly_variable_genes(adata)
-    sc.pp.pca(adata)
-    sc.pl.pca(adata, color='condition')
+# Standard scanpy workflow
+sc.pp.filter_genes(adata, min_cells=3)
+sc.pp.normalize_total(adata, target_sum=1e6)
+sc.pp.log1p(adata)
+sc.pp.highly_variable_genes(adata, n_top_genes=2000)
+sc.pp.pca(adata)
+sc.pp.neighbors(adata)
+sc.tl.umap(adata)
+sc.pl.umap(adata, color=['condition', 'timepoint'])
 ```
 
 ---
 
-## File Formats
+# Part 2: NGS Workflow Datasets (FASTQ/SAM/VCF)
 
-### FASTA Format
-- Standard bioinformatics sequence format
-- Compatible with: BioPython, BioPerl, samtools, BLAST, etc.
-- 80-character line wrapping for sequences
+Standard next-generation sequencing formats used across NGS workflows, from raw reads to variant calling.
 
-### HDF5 Format
-- Hierarchical Data Format 5
-- Efficient storage and access for large genomics data
-- Compression enabled (gzip, level 6-9)
-- Compatible with: h5py, PyTables, HDF5 libraries in R/MATLAB
+## 5. FASTQ - Raw Sequencing Reads
 
----
+**File:** `illumina_reads_sample.fastq` (178 bytes)
 
-## Tools and Libraries
+Raw sequencing reads from Illumina platform with Phred quality scores. FASTQ is the de facto standard for storing unaligned sequencing data.
 
-### Python
+**Use cases:** Quality control, read trimming, sequence alignment
+
+**Format Specification:**
+- **Content:** Raw sequencing reads + base quality scores
+- **Structure:** 4 lines per read (identifier, sequence, separator, quality)
+- **Quality encoding:** Phred+33 (Illumina 1.8+) or Phred+64 (older)
+- **Compression:** Usually gzipped (.fastq.gz)
+
+**Usage Example (Python - BioPython):**
+```python
+from Bio import SeqIO
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Read FASTQ file
+reads = list(SeqIO.parse("illumina_reads_sample.fastq", "fastq"))
+
+print(f"Total reads: {len(reads)}")
+
+# Examine first read
+read = reads[0]
+print(f"\nRead ID: {read.id}")
+print(f"Sequence: {read.seq}")
+print(f"Quality: {read.letter_annotations['phred_quality']}")
+print(f"Length: {len(read)}")
+
+# Calculate statistics
+lengths = [len(r) for r in reads]
+qualities = [np.mean(r.letter_annotations['phred_quality']) for r in reads]
+
+print(f"\nMean read length: {np.mean(lengths):.1f} bp")
+print(f"Mean quality score: {np.mean(qualities):.1f}")
+
+# Plot quality distribution
+plt.figure(figsize=(10, 6))
+plt.hist(qualities, bins=20, edgecolor='black', alpha=0.7)
+plt.xlabel("Mean Quality Score")
+plt.ylabel("Number of Reads")
+plt.title("Read Quality Distribution")
+plt.grid(True, alpha=0.3)
+plt.savefig("quality_distribution.png")
+
+# Filter by quality
+high_quality = [r for r in reads if np.mean(r.letter_annotations['phred_quality']) >= 30]
+print(f"\nHigh quality reads (Q>=30): {len(high_quality)}")
+
+# Write filtered reads
+SeqIO.write(high_quality, "filtered_reads.fastq", "fastq")
+```
+
+**Quality Control Workflow:**
+```python
+from Bio import SeqIO
+import numpy as np
+import matplotlib.pyplot as plt
+
+def analyze_fastq(filename):
+    """Comprehensive FASTQ QC"""
+    reads = list(SeqIO.parse(filename, "fastq"))
+
+    # Basic stats
+    print(f"Total reads: {len(reads)}")
+
+    lengths = [len(r) for r in reads]
+    mean_quals = [np.mean(r.letter_annotations['phred_quality']) for r in reads]
+
+    print(f"Read length: {np.mean(lengths):.1f} ± {np.std(lengths):.1f} bp")
+    print(f"Mean quality: {np.mean(mean_quals):.2f}")
+
+    # Per-position quality
+    max_len = max(lengths)
+    pos_quals = [[] for _ in range(max_len)]
+
+    for read in reads:
+        quals = read.letter_annotations['phred_quality']
+        for i, q in enumerate(quals):
+            pos_quals[i].append(q)
+
+    mean_pos_qual = [np.mean(pq) for pq in pos_quals if pq]
+
+    # Plot
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    ax1.plot(mean_pos_qual)
+    ax1.axhline(y=30, color='r', linestyle='--', label='Q30')
+    ax1.axhline(y=20, color='orange', linestyle='--', label='Q20')
+    ax1.set_xlabel('Position in read (bp)')
+    ax1.set_ylabel('Mean Quality Score')
+    ax1.set_title('Quality by Position')
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+
+    ax2.hist(mean_quals, bins=30, edgecolor='black', alpha=0.7)
+    ax2.set_xlabel('Mean Read Quality')
+    ax2.set_ylabel('Count')
+    ax2.set_title('Read Quality Distribution')
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig('fastq_qc.png', dpi=150)
+
+analyze_fastq("illumina_reads_sample.fastq")
+```
+
+**Command-Line Tools:**
 ```bash
-pip install biopython h5py numpy pandas scipy
-```
+# FASTQ quality control
+fastqc illumina_reads_sample.fastq
 
-**Key Libraries:**
-- `biopython`: FASTA parsing and sequence analysis
-- `h5py`: HDF5 file access
-- `pysam`: SAM/BAM/VCF file handling
-- `pandas`: Data manipulation
-- `scanpy`: Single-cell/bulk RNA-seq analysis
+# Count FASTQ reads
+echo $(($(wc -l < illumina_reads_sample.fastq) / 4))
 
-### R
-```r
-install.packages(c("rhdf5", "Biostrings", "DESeq2"))
-```
-
-### Command Line Tools
-- `seqkit`: FASTA/FASTQ manipulation
-- `samtools`: Reference genome indexing
-- `bcftools`: VCF manipulation
-- `h5dump`: HDF5 inspection
-
----
-
-## Scientific Applications
-
-1. **Reference Genome:**
-   - Alignment algorithm testing
-   - Variant calling pipeline validation
-   - Genome assembly benchmarking
-
-2. **Variant Calls:**
-   - Population genetics analysis
-   - GWAS (Genome-Wide Association Studies)
-   - Variant effect prediction
-   - Genotype imputation testing
-
-3. **RNA-seq Expression:**
-   - Differential expression analysis
-   - Time-series analysis
-   - Machine learning for gene expression
-   - Clustering and classification
-
----
-
-## Citation
-
-```
-GRC Datasets Repository - Genomics Collection
-Created: October 2024
-Formats: FASTA, HDF5
-Repository: https://github.com/grc-iit/Datasets
+# Convert FASTQ to FASTA
+seqtk seq -a illumina_reads_sample.fastq > reads.fasta
 ```
 
 ---
 
-## License
+## 6. SAM - Sequence Alignment
 
-These datasets are provided for educational, research, and benchmarking purposes.
+**File:** `toy_alignment.sam` (786 bytes)
+
+Example alignment file showing mapped sequencing reads. SAM is the human-readable text format for storing biological sequences aligned to a reference genome.
+
+**Use cases:** Alignment viewing, format learning, pipeline testing
+
+**Format Specification:**
+- **SAM:** Human-readable text format for alignments
+- **BAM:** Binary compressed version of SAM (smaller, faster)
+- **Content:** Aligned reads with CIGAR strings, mapping quality
+- **Tools:** samtools, Picard, GATK
+
+**Usage Example (Python - pysam):**
+```python
+import pysam
+import pandas as pd
+
+# Read SAM file
+samfile = pysam.AlignmentFile("toy_alignment.sam", "r")
+
+# Print header
+print("Reference sequences:")
+for ref in samfile.references:
+    length = samfile.get_reference_length(ref)
+    print(f"  {ref}: {length} bp")
+
+# Iterate through alignments
+alignments = []
+for read in samfile:
+    alignments.append({
+        'name': read.query_name,
+        'reference': read.reference_name,
+        'position': read.reference_start,
+        'mapq': read.mapping_quality,
+        'flag': read.flag,
+        'cigar': read.cigarstring,
+        'sequence': read.query_sequence[:20] + "..." if read.query_sequence else None
+    })
+
+df = pd.DataFrame(alignments)
+print(f"\nTotal alignments: {len(df)}")
+print(df.head())
+
+# Statistics
+print(f"\nMapped reads: {(df['mapq'] > 0).sum()}")
+print(f"Mean mapping quality: {df['mapq'].mean():.2f}")
+
+# Count by reference
+print("\nReads per reference:")
+print(df['reference'].value_counts())
+
+samfile.close()
+
+# For BAM files (binary, must specify 'rb')
+# bamfile = pysam.AlignmentFile("file.bam", "rb")
+```
+
+**Command-Line Operations:**
+```bash
+# View SAM file
+samtools view toy_alignment.sam | head
+
+# Convert SAM to BAM
+samtools view -b toy_alignment.sam > alignment.bam
+
+# Sort BAM
+samtools sort alignment.bam -o alignment.sorted.bam
+
+# Index BAM
+samtools index alignment.sorted.bam
+
+# Get alignment statistics
+samtools flagstat alignment.bam
+samtools stats alignment.bam
+```
+
+---
+
+## 7. VCF - Variant Call Format
+
+**File:** `sample_variants.vcf` (2.1 KB)
+
+Example variant calls showing SNPs, insertions, and deletions. VCF is the standard format for storing gene sequence variations.
+
+**Use cases:** Variant analysis, genotype studies, population genetics
+
+**Format Specification:**
+- **VCF:** Variant Call Format (text)
+- **BCF:** Binary VCF (compressed)
+- **Content:** SNPs, indels, structural variants
+- **Fields:** Position, reference, alternate, quality, genotypes
+
+**Usage Example (Python - pysam):**
+```python
+import pysam
+import pandas as pd
+
+# Read VCF file
+vcf = pysam.VariantFile("sample_variants.vcf")
+
+# Print header
+print("VCF version:", vcf.header.version)
+print("\nContigs:")
+for contig in vcf.header.contigs:
+    print(f"  {contig}")
+
+print("\nSamples:")
+for sample in vcf.header.samples:
+    print(f"  {sample}")
+
+# Iterate through variants
+variants = []
+for rec in vcf:
+    variants.append({
+        'chrom': rec.chrom,
+        'pos': rec.pos,
+        'id': rec.id,
+        'ref': rec.ref,
+        'alt': ','.join([str(a) for a in rec.alts]) if rec.alts else '.',
+        'qual': rec.qual,
+        'filter': ','.join(rec.filter.keys()) if rec.filter else 'PASS'
+    })
+
+df = pd.DataFrame(variants)
+print(f"\nTotal variants: {len(df)}")
+print(df.head())
+
+# Variant type counts
+df['type'] = df.apply(lambda x: 'SNP' if len(x['ref']) == 1 and len(x['alt']) == 1 else 'INDEL', axis=1)
+print("\nVariant types:")
+print(df['type'].value_counts())
+
+vcf.close()
+```
+
+**Variant Filtering:**
+```python
+import pysam
+
+def filter_variants(input_vcf, output_vcf, min_qual=30, min_depth=10):
+    """Filter VCF by quality and depth"""
+    vcf_in = pysam.VariantFile(input_vcf)
+    vcf_out = pysam.VariantFile(output_vcf, 'w', header=vcf_in.header)
+
+    total = 0
+    passed = 0
+
+    for rec in vcf_in:
+        total += 1
+
+        # Apply filters
+        if rec.qual and rec.qual >= min_qual:
+            # Check depth if available
+            if 'DP' in rec.info:
+                if rec.info['DP'] >= min_depth:
+                    vcf_out.write(rec)
+                    passed += 1
+            else:
+                vcf_out.write(rec)
+                passed += 1
+
+    print(f"Total variants: {total}")
+    print(f"Passed filters: {passed} ({100*passed/total:.1f}%)")
+
+    vcf_in.close()
+    vcf_out.close()
+
+filter_variants("sample_variants.vcf", "filtered_variants.vcf")
+```
+
+**Command-Line Operations:**
+```bash
+# View VCF
+bcftools view sample_variants.vcf
+
+# Filter variants by quality
+bcftools view -i 'QUAL>30' sample_variants.vcf
+
+# Convert VCF to BCF (binary)
+bcftools view sample_variants.vcf -O b -o variants.bcf
+
+# Count variants
+bcftools stats sample_variants.vcf
+
+# Extract specific regions
+bcftools view sample_variants.vcf chr1:1000-2000
+```
+
+---
+
+# Installation & Tools
+
+## Python Packages
+
+```bash
+# BioPython (comprehensive bio package)
+pip install biopython
+
+# pysam (SAM/BAM/VCF parsing)
+pip install pysam
+
+# HDF5 support
+pip install h5py
+
+# Data analysis
+pip install pandas numpy scipy matplotlib
+
+# Single-cell/expression analysis
+pip install scanpy anndata
+
+# scikit-bio
+pip install scikit-bio
+```
+
+## Command-Line Tools
+
+```bash
+# Using bioconda (recommended)
+conda install -c bioconda samtools bcftools bedtools
+
+# Or with apt (Ubuntu/Debian)
+sudo apt install samtools bcftools bedtools
+
+# FASTQ tools
+conda install -c bioconda fastqc seqtk
+
+# Sequence statistics
+conda install -c bioconda seqkit
+```
+
+---
+
+# File Format Conversions
+
+```python
+from Bio import SeqIO
+
+# FASTQ to FASTA
+SeqIO.convert("illumina_reads_sample.fastq", "fastq",
+              "reads.fasta", "fasta")
+
+# Extract sequences only
+with open("sequences.txt", "w") as out:
+    for record in SeqIO.parse("illumina_reads_sample.fastq", "fastq"):
+        out.write(f">{record.id}\n{record.seq}\n")
+```
+
+---
+
+# Applications
+
+Genomics data is used for:
+- **Clinical genomics:** Disease diagnosis, personalized medicine
+- **Population genetics:** Evolution, ancestry, genetic diversity
+- **Cancer genomics:** Tumor profiling, mutation analysis
+- **Agricultural genomics:** Crop improvement, livestock breeding
+- **Metagenomics:** Microbiome analysis, environmental surveys
+- **Transcriptomics:** RNA-seq, gene expression studies
+- **Epigenomics:** DNA methylation, histone modifications
+
+---
+
+# Major Public Datasets
+
+- **1000 Genomes Project:** Human genetic variation - [internationalgenome.org](http://www.internationalgenome.org/)
+- **TCGA:** Cancer genomics (TB-scale) - [cancer.gov/tcga](https://www.cancer.gov/tcga)
+- **gnomAD:** Human variants (>700TB) - [gnomad.broadinstitute.org](https://gnomad.broadinstitute.org/)
+- **ENCODE:** Functional elements - [encodeproject.org](https://www.encodeproject.org/)
+- **UK Biobank:** 500k genomes - [ukbiobank.ac.uk](https://www.ukbiobank.ac.uk/)
+- **SRA:** Sequence Read Archive (PB-scale) - [ncbi.nlm.nih.gov/sra](https://www.ncbi.nlm.nih.gov/sra)
+
+---
+
+# Resources
+
+- **SAM/BAM Specification:** [samtools.github.io/hts-specs](https://samtools.github.io/hts-specs/)
+- **VCF Specification:** [samtools.github.io/hts-specs/VCFv4.3.pdf](https://samtools.github.io/hts-specs/VCFv4.3.pdf)
+- **BioPython Tutorial:** [biopython.org/DIST/docs/tutorial/Tutorial.html](http://biopython.org/DIST/docs/tutorial/Tutorial.html)
+- **pysam Documentation:** [pysam.readthedocs.io](https://pysam.readthedocs.io/)
+- **samtools:** [samtools.github.io](http://www.htslib.org/)
+- **GATK Best Practices:** [gatk.broadinstitute.org](https://gatk.broadinstitute.org/)
